@@ -37,10 +37,10 @@ func RunServer() {
 		IdleTimeout:  15 * time.Second,
 	}
 
-	log.Printf("Сервер запущен. Порт: %s", todoPort)
+	log.Printf("The server is running. Port: %s", todoPort)
 
 	err := server.ListenAndServe()
 	if err != nil {
-		logger.Fatal("Ошибка запуска сервера: ", err)
+		logger.Fatal("Server startup error: ", err)
 	}
 }
