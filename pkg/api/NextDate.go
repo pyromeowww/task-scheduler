@@ -32,11 +32,11 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 	case "d":
 		return nextDay(date, now, repeatParts)
 	case "w":
-		return nextWeek()
+		return nextWeek(date, now, repeatParts)
 	case "m":
-		return nextMonthDays()
+		return nextMonthDays(date, now, repeatParts)
 	case "y":
-		return nextYear()
+		return nextYear(date, now, repeatParts)
 	default:
 		return "", errors.New("unknown format")
 	}
@@ -62,6 +62,109 @@ func nextDay(date time.Time, now time.Time, fields []string) (string, error) {
 
 	for {
 		date = date.AddDate(0, 0, interval)
+		if afterNow(date, now) {
+			break
+		}
+	}
+	return date.Format(DateFormat), nil
+}
+
+func nextWeek(date time.Time, now time.Time, fields []string) (string, error) {
+	if len(fields) < 2 {
+		return "", errors.New("invalid week format")
+	}
+
+	// Парсим разрешённые дни недели в map для быстрой проверки
+	daysMap := map[int]bool{}
+	for _, s := range strings.Split(fields[1], ",") {
+		n, err := strconv.Atoi(strings.TrimSpace(s))
+		if err != nil || n < 1 || n > 7 {
+			return "", errors.New("invalid weekday value")
+		}
+		daysMap[n] = true
+	}
+	for {
+		date = date.AddDate(0, 0, 1)
+		wd := int(date.Weekday())
+		if wd == 0 {
+			wd = 7
+		}
+		if daysMap[wd] && afterNow(date, now) {
+			break
+		}
+	}
+	return date.Format(DateFormat), nil
+}
+
+func nextMonthDays(date time.Time, now time.Time, fields []string) (string, error) {
+	if len(fields) < 2 || len(fields) > 3 {
+		return "", errors.New("invalid month rule format")
+	}
+
+	// Парсим дни месяца в map
+	daysMap := map[int]bool{}
+	for _, s := range strings.Split(fields[1], ",") {
+		n, err := strconv.Atoi(strings.TrimSpace(s))
+		if err != nil || n == 0 || n < -2 || n > 31 {
+			return "", errors.New("invalid month day value")
+		}
+		daysMap[n] = true
+	}
+
+	// Парсим месяцы, если они указаны
+	monthMap := map[int]bool{}
+	if len(fields) == 3 {
+		for _, s := range strings.Split(fields[2], ",") {
+			m, err := strconv.Atoi(strings.TrimSpace(s))
+			if err != nil || m < 1 || m > 12 {
+				return "", errors.New("invalid month value")
+			}
+			monthMap[m] = true
+		}
+	}
+
+	// Поиск ближащей даты
+	for {
+		date = date.AddDate(0, 0, 1)
+		// Если месяцы были ограничены (len > 0), проверяем текущий месяц
+		if len(monthMap) > 0 && !monthMap[int(date.Month())] {
+			continue // Месяц не подходит, идем дальше
+		}
+		// Проверяем, подходит ли день месяца
+		if isMatchDay(date, daysMap) && afterNow(date, now) {
+			break
+		}
+	}
+	return date.Format(DateFormat), nil
+}
+
+// isMatchDay — вспомогательная функция для проверки дня месяца
+func isMatchDay(d time.Time, daysMap map[int]bool) bool {
+	day := d.Day() // Текущий день
+
+	// Находим последний день текущего месяца
+	lastDay := time.Date(d.Year(), d.Month()+1, 1, 0, 0, 0, 0, d.Location()).AddDate(0, 0, -1).Day()
+
+	if daysMap[day] {
+		return true
+	}
+	// Проверка на последний день месяца
+	if daysMap[-1] && day == lastDay {
+		return true
+	}
+	// Проверка на предпоследний день месяца
+	if daysMap[-2] && day == lastDay-1 {
+		return true
+	}
+	return false
+}
+
+func nextYear(date time.Time, now time.Time, fields []string) (string, error) {
+	if len(fields) != 1 {
+		return "", errors.New("invalid year format: 'y' does not accept arguments")
+	}
+	for {
+		date = date.AddDate(1, 0, 0)
 		if afterNow(date, now) {
 			break
 		}
