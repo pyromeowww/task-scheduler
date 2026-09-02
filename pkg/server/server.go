@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/pyromeowww/task-scheduler/pkg/api"
 	"github.com/pyromeowww/task-scheduler/tests"
 )
 
@@ -27,6 +28,7 @@ func RunServer() {
 	webDir := "./web"
 
 	router.Handle("/", http.FileServer(http.Dir(webDir)))
+	router.HandleFunc("/api/nextdate", api.NextDateHandler)
 
 	server := &http.Server{
 		Addr:         ":" + todoPort,

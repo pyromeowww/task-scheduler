@@ -3,6 +3,7 @@ package api
 import (
 	"errors"
 	"fmt"
+	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -40,6 +41,39 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 	default:
 		return "", errors.New("unknown format")
 	}
+}
+
+func NextDateHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var now time.Time
+	nowStr := r.URL.Query().Get("now")
+	if nowStr == "" {
+		now = time.Now()
+	} else {
+		var err error
+		now, err = time.Parse(DateFormat, nowStr)
+		if err != nil {
+			http.Error(w, "invalid now date", http.StatusBadRequest)
+			return
+		}
+	}
+
+	dateStr := r.URL.Query().Get("date")
+	repeatStr := r.URL.Query().Get("repeat")
+
+	nextDate, err := NextDate(now, dateStr, repeatStr)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/plain")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(nextDate))
 }
 
 func afterNow(date time.Time, now time.Time) bool {
