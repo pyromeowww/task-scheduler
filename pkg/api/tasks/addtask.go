@@ -64,7 +64,7 @@ func checkDate(task *db.Task) error {
 	nowStr := now.Format(DateFormat)
 	// Если дата не указана, используем сегодняшнюю.
 	if task.Date == "" {
-		task.Date = now.Format(nowStr)
+		task.Date = nowStr
 	}
 
 	// Проверяем, что дата соответствует формату ГГГГММДД.
