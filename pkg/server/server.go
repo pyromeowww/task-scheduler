@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/pyromeowww/task-scheduler/pkg/api"
+	"github.com/pyromeowww/task-scheduler/pkg/api/tasks"
 	"github.com/pyromeowww/task-scheduler/tests"
 )
 
@@ -29,6 +30,7 @@ func RunServer() {
 
 	router.Handle("/", http.FileServer(http.Dir(webDir)))
 	router.HandleFunc("/api/nextdate", api.NextDateHandler)
+	router.HandleFunc("POST /api/task", tasks.AddTaskHandler)
 
 	server := &http.Server{
 		Addr:         ":" + todoPort,

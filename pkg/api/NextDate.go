@@ -43,37 +43,37 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 	}
 }
 
-func NextDateHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+func NextDateHandler(res http.ResponseWriter, req *http.Request) {
+	if req.Method != http.MethodGet {
+		http.Error(res, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
 	var now time.Time
-	nowStr := r.URL.Query().Get("now")
+	nowStr := req.URL.Query().Get("now")
 	if nowStr == "" {
 		now = time.Now()
 	} else {
 		var err error
 		now, err = time.Parse(DateFormat, nowStr)
 		if err != nil {
-			http.Error(w, "invalid now date", http.StatusBadRequest)
+			http.Error(res, "invalid now date", http.StatusBadRequest)
 			return
 		}
 	}
 
-	dateStr := r.URL.Query().Get("date")
-	repeatStr := r.URL.Query().Get("repeat")
+	dateStr := req.URL.Query().Get("date")
+	repeatStr := req.URL.Query().Get("repeat")
 
 	nextDate, err := NextDate(now, dateStr, repeatStr)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(res, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	w.Header().Set("Content-Type", "text/plain")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(nextDate))
+	res.Header().Set("Content-Type", "text/plain")
+	res.WriteHeader(http.StatusOK)
+	res.Write([]byte(nextDate))
 }
 
 func afterNow(date time.Time, now time.Time) bool {

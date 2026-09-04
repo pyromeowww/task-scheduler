@@ -18,7 +18,7 @@ repeat VARCHAR(128) NOT NULL DEFAULT ""
 const indexData = `CREATE INDEX scheduler_date ON scheduler(date);`
 
 // глобальная переменная, хранящая подключение к базе данных
-var db *sql.DB
+var Db *sql.DB
 
 // Init — открывает базу данных и при необходимости создавёт таблицу с индексом
 func Init(dbfile string) error {
@@ -39,20 +39,20 @@ func Init(dbfile string) error {
 		return err
 	}
 
-	db, err = sql.Open("sqlite", dbfile)
+	Db, err = sql.Open("sqlite", dbfile)
 	if err != nil {
 		return fmt.Errorf("failed to open database: %w", err)
 	}
 	// Проверяем подключение к БД
-	if err := db.Ping(); err != nil {
+	if err := Db.Ping(); err != nil {
 		return fmt.Errorf("failed to ping database: %w", err)
 	}
 
 	if install {
-		if _, err := db.Exec(schema); err != nil {
+		if _, err := Db.Exec(schema); err != nil {
 			return fmt.Errorf("failed to create table: %w", err)
 		}
-		if _, err := db.Exec(indexData); err != nil {
+		if _, err := Db.Exec(indexData); err != nil {
 			return fmt.Errorf("failed to create index: %w", err)
 		}
 	}
@@ -60,8 +60,8 @@ func Init(dbfile string) error {
 }
 
 func Close() error {
-	if db != nil {
-		return db.Close()
+	if Db != nil {
+		return Db.Close()
 	}
 	return nil
 }
