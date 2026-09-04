@@ -12,26 +12,28 @@ import (
 	"github.com/pyromeowww/task-scheduler/tests"
 )
 
-// RunServer инициализирует и запускает сервер
+// RunServer инициализирует и запускает HTTP-сервер.
 func RunServer() {
-	// Создаём logger
+	// Создаём логгер для записи ошибок сервера.
 	logger := log.New(os.Stdout, "[server]", log.LstdFlags|log.Lshortfile)
 
-	// Пробуем получить порт из окружения, в противном случае, используем стандартное
+	// Порт берём из переменной окружения TODO_PORT,
+	// иначе используем порт по умолчанию.
 	todoPort := os.Getenv("TODO_PORT")
 	if todoPort == "" {
 		todoPort = strconv.Itoa(tests.Port)
 	}
 
-	// Создаём роутер
+	// Создаём роутер и регистрируем маршруты.
 	router := http.NewServeMux()
-	// Папка с фронтенд-файлами, которые будет отдавать сервер
+	// Папка со статическими файлами фронтенда.
 	webDir := "./web"
 
 	router.Handle("/", http.FileServer(http.Dir(webDir)))
 	router.HandleFunc("/api/nextdate", api.NextDateHandler)
 	router.HandleFunc("POST /api/task", tasks.AddTaskHandler)
 
+	// Настраиваем сервер с таймаутами для защиты от зависших соединений.
 	server := &http.Server{
 		Addr:         ":" + todoPort,
 		Handler:      router,
@@ -43,6 +45,7 @@ func RunServer() {
 
 	log.Printf("The server is running. Port: %s", todoPort)
 
+	// Запускаем сервер. Ошибка возникает при остановке или сбое.
 	err := server.ListenAndServe()
 	if err != nil {
 		logger.Fatal("Server startup error: ", err)

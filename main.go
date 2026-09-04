@@ -1,3 +1,4 @@
+
 package main
 
 import (
@@ -8,22 +9,27 @@ import (
 	"github.com/pyromeowww/task-scheduler/pkg/server"
 )
 
+
 func main() {
-	// Пытаемся определить путь к БД через переменную окружения
+	// Путь к БД берём из переменной окружения TODO_DBFILE.
+	// Если она не задана, используем стандартное имя файла в рабочей папке.
 	dbFile := os.Getenv("TODO_DBFILE")
 	if dbFile == "" {
 		dbFile = "scheduler.db"
 	}
-	// Инициализируем БД
+
+	// Открываем базу данных и подготавливаем её к работе.
+	// При ошибке программа завершается, так как без БД сервер не сможет работать.
 	if err := db.Init(dbFile); err != nil {
 		log.Fatalf("Database initialization error: %v", err)
 	}
-	// Закрываем базу при завершении всей программы
+
+	// Отложенное закрытие базы данных.
 	defer func() {
 		if err := db.Close(); err != nil {
 			log.Printf("failed to close database: %v", err)
 		}
 	}()
-	// Запуск сервера
+	
 	server.RunServer()
 }
