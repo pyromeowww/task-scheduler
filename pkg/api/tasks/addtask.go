@@ -9,9 +9,8 @@ import (
 
 	"github.com/pyromeowww/task-scheduler/pkg/api"
 	"github.com/pyromeowww/task-scheduler/pkg/db"
+	"github.com/pyromeowww/task-scheduler/pkg/settings"
 )
-
-const DateFormat = "20060102"
 
 // AddTaskHandler обрабатывает POST-запрос для добавления новой задачи.
 func AddTaskHandler(res http.ResponseWriter, req *http.Request) {
@@ -61,14 +60,14 @@ func writeError(res http.ResponseWriter, status int, errText string) {
 // переносит её на следующую дату по правилу повторения.
 func checkDate(task *db.Task) error {
 	now := time.Now()
-	nowStr := now.Format(DateFormat)
+	nowStr := now.Format(settings.DateFormat)
 	// Если дата не указана, используем сегодняшнюю.
 	if task.Date == "" {
 		task.Date = nowStr
 	}
 
 	// Проверяем, что дата соответствует формату ГГГГММДД.
-	t, err := time.Parse(DateFormat, task.Date)
+	t, err := time.Parse(settings.DateFormat, task.Date)
 	if err != nil {
 		return fmt.Errorf("invalid date format %q, expected YYYYMMDD", task.Date)
 	}

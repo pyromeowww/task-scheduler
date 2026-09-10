@@ -7,10 +7,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/pyromeowww/task-scheduler/pkg/settings"
 )
-
-
-const DateFormat = "20060102"
 
 // NextDate вычисляет следующую дату выполнения задачи по правилу повторения.
 // now — текущая дата;
@@ -24,7 +23,7 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 	}
 
 	// Преобразуем строку с начальной датой в объект time.Time.
-	date, err := time.Parse(DateFormat, dstart)
+	date, err := time.Parse(settings.DateFormat, dstart)
 	if err != nil {
 		return "", fmt.Errorf("invalid dstart format: %w", err)
 	}
@@ -62,7 +61,7 @@ func NextDateHandler(res http.ResponseWriter, req *http.Request) {
 		now = time.Now()
 	} else {
 		var err error
-		now, err = time.Parse(DateFormat, nowStr)
+		now, err = time.Parse(settings.DateFormat, nowStr)
 		if err != nil {
 			http.Error(res, "invalid now date", http.StatusBadRequest)
 			return
@@ -113,7 +112,7 @@ func nextDay(date time.Time, now time.Time, fields []string) (string, error) {
 			break
 		}
 	}
-	return date.Format(DateFormat), nil
+	return date.Format(settings.DateFormat), nil
 }
 
 // nextWeek рассчитывает следующую дату для правила — по дням недели.
@@ -145,7 +144,7 @@ func nextWeek(date time.Time, now time.Time, fields []string) (string, error) {
 			break
 		}
 	}
-	return date.Format(DateFormat), nil
+	return date.Format(settings.DateFormat), nil
 }
 
 // nextMonthDays рассчитывает следующую дату для правила m.
@@ -190,7 +189,7 @@ func nextMonthDays(date time.Time, now time.Time, fields []string) (string, erro
 			break
 		}
 	}
-	return date.Format(DateFormat), nil
+	return date.Format(settings.DateFormat), nil
 }
 
 // isMatchDay проверяет, входит ли день даты d в список разрешённых дней месяца.
@@ -228,5 +227,5 @@ func nextYear(date time.Time, now time.Time, fields []string) (string, error) {
 			break
 		}
 	}
-	return date.Format(DateFormat), nil
+	return date.Format(settings.DateFormat), nil
 }
