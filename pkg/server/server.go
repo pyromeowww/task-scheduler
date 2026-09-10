@@ -33,6 +33,8 @@ func RunServer() {
 	router.HandleFunc("/api/nextdate", api.NextDateHandler)
 	router.HandleFunc("POST /api/task", tasks.AddTaskHandler)
 	router.HandleFunc("GET /api/tasks", tasks.TasksHandler)
+	//router.HandleFunc("GET /api/tasks", )
+	//router.HandleFunc("PUT /api/tasks", )
 
 	// Настраиваем сервер с таймаутами для защиты от зависших соединений.
 	server := &http.Server{

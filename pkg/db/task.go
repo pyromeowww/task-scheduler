@@ -1,5 +1,10 @@
 package db
 
+import (
+	"database/sql"
+	"errors"
+)
+
 // Task — модель задачи в базе данных.
 type Task struct {
 	ID      string `json:"id,omitempty"`
@@ -8,6 +13,8 @@ type Task struct {
 	Comment string `json:"comment"`
 	Repeat  string `json:"repeat"`
 }
+
+// Создание / список
 
 // AddTask сохраняет новую задачу в таблицу scheduler
 // и возвращает её идентификатор.
@@ -71,11 +78,47 @@ func Tasks(limit int) ([]*Task, error) {
 	return tasks, nil
 }
 
+// Работа с одной записью
+
+func GetTask(id string) (*Task, error) {
+	query := `SELECT id, date, title, comment, repeat FROM scheduler WHERE id = ?`
+	task := &Task{}
+	err := Db.QueryRow(query, id).Scan(&task.ID, &task.Date, &task.Title, &task.Comment, &task.Repeat)
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, errors.New("The task was not found.")
+		default:
+			return nil, err
+		}
+	}
+	return task, nil
+}
+
+func UpdateTask(task *Task) error {
+	query := `UPDATE scheduler SET date = ?, title = ?, comment = ?, repeat = ? WHERE id = ?`
+	res, err := Db.Exec(query, task.Date, task.Title, task.Comment, task.Repeat, task.ID)
+	if err != nil {
+		return err
+	}
+	// метод RowsAffected() возвращает количество записей к которым
+	// была применена SQL команда
+	count, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if count == 0 {
+		return errors.New("incorrect id for updating task")
+	}
+	return nil
+}
+
+// Поиск
 
 // SearchByDate возвращает список задач, назначенных на конкретную дату.
 // data — дата в формате ГГГГММДД (20060102);
 // limit — максимальное количество возвращаемых записей.
-func SearchByDate(data string, limit int) ([]*Task, error){
+func SearchByDate(data string, limit int) ([]*Task, error) {
 	// Создаём пустой (но не nil) слайс.
 	tasks := make([]*Task, 0)
 
@@ -102,7 +145,7 @@ func SearchByDate(data string, limit int) ([]*Task, error){
 		// Копируем значения колонок текущей строки в поля task.
 		// Адреса (&task.ID и т.д.) нужны, чтобы Scan мог записать данные внутрь.
 		if err := rows.Scan(&task.ID, &task.Date, &task.Title, &task.Comment, &task.Repeat); err != nil {
-			return tasks,err
+			return tasks, err
 		}
 		// Добавляем прочитанную задачу в итоговый список.
 		tasks = append(tasks, task)
@@ -120,7 +163,7 @@ func SearchByDate(data string, limit int) ([]*Task, error){
 // встречается подстрока data.
 // data — текст для поиска;
 // limit — максимальное количество возвращаемых записей.
-func SearchByText(data string, limit int) ([]*Task, error){
+func SearchByText(data string, limit int) ([]*Task, error) {
 	// Создаём пустой (но не nil) слайс.
 	tasks := make([]*Task, 0)
 
@@ -133,10 +176,10 @@ func SearchByText(data string, limit int) ([]*Task, error){
 
 	// Передаём одно и то же значение в оба "?" (для title и comment),
 	// а последним аргументом — лимит.
-	rows, err := Db.Query(query,like,like,limit)
+	rows, err := Db.Query(query, like, like, limit)
 	// Если база не смогла выполнить запрос — сразу возвращаем ошибку.
 	if err != nil {
-		return tasks,err
+		return tasks, err
 	}
 	// Гарантируем, что соединение с БД освободится после выхода из функции,
 	// даже если произойдёт ошибка в середине цикла.
@@ -151,7 +194,7 @@ func SearchByText(data string, limit int) ([]*Task, error){
 		// Копируем значения колонок текущей строки в поля task.
 		// Адреса (&task.ID и т.д.) нужны, чтобы Scan мог записать данные внутрь.
 		if err := rows.Scan(&task.ID, &task.Date, &task.Title, &task.Comment, &task.Repeat); err != nil {
-			return tasks,err
+			return tasks, err
 		}
 		// Добавляем прочитанную задачу в итоговый список.
 		tasks = append(tasks, task)

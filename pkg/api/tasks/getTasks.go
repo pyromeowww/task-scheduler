@@ -38,6 +38,21 @@ func TasksHandler(res http.ResponseWriter, req *http.Request) {
 	writeJSON(res, http.StatusOK, TasksResp{Tasks: tasks})
 }
 
+func GetTaskHandler(res http.ResponseWriter, req *http.Request) {
+	id := req.URL.Query().Get("id")
+	if id == "" {
+		writeError(res, http.StatusBadRequest, "Не указан идентификатор")
+		return
+	}
+
+	task, err := db.GetTask(id)
+	if err != nil {
+		writeError(res, http.StatusNotFound, "Задача не найдена")
+		return
+	}
+	writeJSON(res, http.StatusOK, task)
+}
+
 func isDate(s string) bool {
 	_, err := time.Parse("02.01.2006", s)
 	return err == nil
