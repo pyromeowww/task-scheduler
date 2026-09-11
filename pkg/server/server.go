@@ -40,8 +40,10 @@ func RunServer() {
 	router.HandleFunc("GET /api/task", tasks.GetTaskHandler)
 	// Обновление существующей задачи.
 	router.HandleFunc("PUT /api/task", tasks.UpdateTaskHandler)
-	//
-	//router.HandleFunc("POST /api/task/done", )
+	// Выполнение существующей задачи.
+	router.HandleFunc("POST /api/task/done", tasks.DoneTaskHandler)
+	// Удаление существующей задачи.
+	router.HandleFunc("DELETE /api/task", tasks.DeleteTaskHandler)
 
 	// Настраиваем сервер с таймаутами для защиты от зависших соединений.
 	server := &http.Server{

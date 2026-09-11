@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"os"
 
@@ -20,8 +21,11 @@ repeat VARCHAR(128) NOT NULL DEFAULT ""
 // indexData — индекс по дате для ускорения выборки задач.
 const indexData = `CREATE INDEX scheduler_date ON scheduler(date);`
 
-// Db — глобальное подключение к базе данных.
-var Db *sql.DB
+var (
+	// Db — глобальное подключение к базе данных.
+	Db *sql.DB
+	ErrTaskNotFound = errors.New("Задача не найдена")
+)
 
 // Init открывает базу данных и, если файл ещё не существовал,
 // создаёт таблицу задач и индекс.
