@@ -108,7 +108,7 @@ func UpdateTask(task *Task) error {
 		return err
 	}
 	if count == 0 {
-		return errors.New("incorrect id for updating task")
+		return errors.New("Задача не найдена")
 	}
 	return nil
 }

@@ -14,7 +14,13 @@ import (
 
 // AddTaskHandler обрабатывает POST-запрос для добавления новой задачи.
 func AddTaskHandler(res http.ResponseWriter, req *http.Request) {
+	if req.Method != http.MethodPost {
+		writeError(res, http.StatusMethodNotAllowed, "Method not allowed")
+		return
+	}
+
 	var task db.Task
+	defer req.Body.Close()
 
 	// Разбираем тело запроса в структуру задачи.
 	if err := json.NewDecoder(req.Body).Decode(&task); err != nil {

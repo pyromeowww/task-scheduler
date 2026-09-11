@@ -1,4 +1,3 @@
-
 package main
 
 import (
@@ -8,7 +7,6 @@ import (
 	"github.com/pyromeowww/task-scheduler/pkg/db"
 	"github.com/pyromeowww/task-scheduler/pkg/server"
 )
-
 
 func main() {
 	// Путь к БД берём из переменной окружения TODO_DBFILE.
@@ -30,6 +28,6 @@ func main() {
 			log.Printf("failed to close database: %v", err)
 		}
 	}()
-	
+
 	server.RunServer()
 }

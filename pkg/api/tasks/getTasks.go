@@ -39,6 +39,11 @@ func TasksHandler(res http.ResponseWriter, req *http.Request) {
 }
 
 func GetTaskHandler(res http.ResponseWriter, req *http.Request) {
+	if req.Method != http.MethodGet {
+		writeError(res, http.StatusMethodNotAllowed, "Method not allowed")
+		return
+	}
+
 	id := req.URL.Query().Get("id")
 	if id == "" {
 		writeError(res, http.StatusBadRequest, "Не указан идентификатор")

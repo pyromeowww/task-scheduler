@@ -30,11 +30,18 @@ func RunServer() {
 	webDir := "./web"
 
 	router.Handle("/", http.FileServer(http.Dir(webDir)))
+	// Вычисление следующей даты для правила повторения задачи.
 	router.HandleFunc("/api/nextdate", api.NextDateHandler)
+	// Добавление новой задачи. Ожидает JSON.
 	router.HandleFunc("POST /api/task", tasks.AddTaskHandler)
+	// Получение списка всех задач. Возвращает JSON-массив задач.
 	router.HandleFunc("GET /api/tasks", tasks.TasksHandler)
-	//router.HandleFunc("GET /api/tasks", )
-	//router.HandleFunc("PUT /api/tasks", )
+	// Получение одной задачи по её ID.
+	router.HandleFunc("GET /api/task", tasks.GetTaskHandler)
+	// Обновление существующей задачи.
+	router.HandleFunc("PUT /api/task", tasks.UpdateTaskHandler)
+	//
+	//router.HandleFunc("POST /api/task/done", )
 
 	// Настраиваем сервер с таймаутами для защиты от зависших соединений.
 	server := &http.Server{
