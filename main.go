@@ -4,11 +4,21 @@ import (
 	"log"
 	"os"
 
+	"github.com/joho/godotenv"
 	"github.com/pyromeowww/task-scheduler/pkg/db"
 	"github.com/pyromeowww/task-scheduler/pkg/server"
 )
 
 func main() {
+
+	if err := godotenv.Load(); err != nil {
+		log.Println("Файл .env не найден, использую переменные окружения")
+	}
+
+	if os.Getenv("SALT_JWT") == "" {
+		log.Fatal("SALT_JWT не задан. Добавь его в .env или переменные окружения")
+	}
+
 	// Путь к БД берём из переменной окружения TODO_DBFILE.
 	// Если она не задана, используем стандартное имя файла в рабочей папке.
 	dbFile := os.Getenv("TODO_DBFILE")
