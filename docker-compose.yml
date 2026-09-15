@@ -7,3 +7,4 @@ services:
       - ./data:/app/data
     environment:
       - SALT_JWT=${SALT_JWT}
+      - TODO_DBFILE=/app/data/scheduler.db

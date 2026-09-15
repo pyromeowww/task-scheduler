@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	_ "modernc.org/sqlite"
 )
@@ -23,13 +24,21 @@ const indexData = `CREATE INDEX scheduler_date ON scheduler(date);`
 
 var (
 	// Db — глобальное подключение к базе данных.
-	Db *sql.DB
+	Db              *sql.DB
 	ErrTaskNotFound = errors.New("Задача не найдена")
 )
 
 // Init открывает базу данных и, если файл ещё не существовал,
 // создаёт таблицу задач и индекс.
 func Init(dbfile string) error {
+
+	dir := filepath.Dir(dbfile)
+	if dir != "." && dir != "" {
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			return fmt.Errorf("failed to create db directory %q: %w", dir, err)
+		}
+	}
+
 	var install bool
 	// Проверяем, существует ли файл базы данных.
 	info, err := os.Stat(dbfile)
