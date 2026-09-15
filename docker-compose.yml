@@ -1,0 +1,9 @@
+services:
+  scheduler:
+    image: pyromeow/task-scheduler:latest
+    ports:
+      - "7540:7540"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - SALT_JWT=${SALT_JWT}

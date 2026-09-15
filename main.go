@@ -7,6 +7,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/pyromeowww/task-scheduler/pkg/db"
 	"github.com/pyromeowww/task-scheduler/pkg/server"
+	"github.com/pyromeowww/task-scheduler/pkg/settings"
 )
 
 func main() {
@@ -15,7 +16,7 @@ func main() {
 		log.Println("Файл .env не найден, использую переменные окружения")
 	}
 
-	if os.Getenv("SALT_JWT") == "" {
+	if os.Getenv(settings.EnvTodoPassword) != "" && os.Getenv(settings.EnvSaltJWT) == "" {
 		log.Fatal("SALT_JWT не задан. Добавь его в .env или переменные окружения")
 	}
 

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/pyromeowww/task-scheduler/pkg/settings"
 )
 
 // SigninHandler обрабатывает POST.
@@ -34,7 +35,7 @@ func SigninHandler(res http.ResponseWriter, req *http.Request) {
 	}
 
 	// Берём пароль из окружения.
-	expected := os.Getenv("TODO_PASSWORD")
+	expected := os.Getenv(settings.EnvTodoPassword)
 	if expected == "" {
 		writeError(res, http.StatusUnauthorized, "Аутентификация не настроена")
 		return
@@ -55,7 +56,7 @@ func SigninHandler(res http.ResponseWriter, req *http.Request) {
 
 	// Создаём токен с алгоритмом HS256 и подписываем его секретом.
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	signed, err := token.SignedString([]byte(os.Getenv("SALT_JWT")))
+	signed, err := token.SignedString([]byte(os.Getenv(settings.EnvSaltJWT)))
 	if err != nil {
 		writeError(res, http.StatusInternalServerError, "Ошибка создания токена")
 		return
@@ -66,7 +67,7 @@ func SigninHandler(res http.ResponseWriter, req *http.Request) {
 func Auth(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		// смотрим наличие пароля
-		pass := os.Getenv("TODO_PASSWORD")
+		pass := os.Getenv(settings.EnvTodoPassword)
 		if len(pass) > 0 {
 			// JWT-токен из куки
 			var jwtToken string
@@ -81,7 +82,7 @@ func Auth(next http.HandlerFunc) http.HandlerFunc {
 				if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 					return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
 				}
-				return []byte(os.Getenv("SALT_JWT")), nil
+				return []byte(os.Getenv(settings.EnvSaltJWT)), nil
 			})
 			if err != nil || !token.Valid {
 				http.Error(res, "Authentification required", http.StatusUnauthorized)

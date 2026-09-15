@@ -87,7 +87,7 @@ func GetTask(id string) (*Task, error) {
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
-			return nil, errors.New("The task was not found.")
+			return nil, ErrTaskNotFound
 		default:
 			return nil, err
 		}
@@ -108,7 +108,7 @@ func UpdateTask(task *Task) error {
 		return err
 	}
 	if count == 0 {
-		return errors.New("Задача не найдена")
+		return ErrTaskNotFound
 	}
 	return nil
 }
@@ -126,7 +126,7 @@ func DeleteTask(id string) error {
 		return err
 	}
 	if count == 0 {
-		return errors.New("Задача не найдена")
+		return ErrTaskNotFound
 	}
 	return nil
 }
@@ -145,7 +145,7 @@ func UpdateDate(next string, id string) error {
 	}
 
 	if count == 0 {
-		return errors.New("Задача не найдена")
+		return ErrTaskNotFound
 	}
 	return nil
 }
@@ -161,7 +161,7 @@ func SearchByDate(data string, limit int) ([]*Task, error) {
 
 	// Выбираем все колонки задач, у которых дата совпадает с указанной.
 	// LIMIT ? ограничивает выборку.
-	query := `SELECT * FROM scheduler WHERE date = ? LIMIT ?`
+	query := `SELECT id, date, title, comment, repeat FROM scheduler WHERE date = ? LIMIT ?`
 
 	// Выполняем запрос. На место "?" подставятся значения data и limit.
 	rows, err := Db.Query(query, data, limit)

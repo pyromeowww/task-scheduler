@@ -35,7 +35,7 @@ func AddTaskHandler(res http.ResponseWriter, req *http.Request) {
 	}
 	// Нормализуем и проверяем дату, а также правило повторения.
 	if err := checkDate(&task); err != nil {
-		writeError(res, http.StatusBadRequest, "The task title is not specified.")
+		writeError(res, http.StatusBadRequest, err.Error())
 		return
 	}
 
