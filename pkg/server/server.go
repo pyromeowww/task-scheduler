@@ -30,20 +30,21 @@ func RunServer() {
 	webDir := "./web"
 
 	router.Handle("/", http.FileServer(http.Dir(webDir)))
+	router.HandleFunc("POST /api/signin", tasks.SigninHandler)
+	// Добавление новой задачи. Ожидает JSON.
+	router.HandleFunc("POST /api/task", tasks.Auth(tasks.AddTaskHandler))
 	// Вычисление следующей даты для правила повторения задачи.
 	router.HandleFunc("/api/nextdate", api.NextDateHandler)
-	// Добавление новой задачи. Ожидает JSON.
-	router.HandleFunc("POST /api/task", tasks.AddTaskHandler)
 	// Получение списка всех задач. Возвращает JSON-массив задач.
-	router.HandleFunc("GET /api/tasks", tasks.TasksHandler)
+	router.HandleFunc("GET /api/tasks", tasks.Auth(tasks.TasksHandler))
 	// Получение одной задачи по её ID.
-	router.HandleFunc("GET /api/task", tasks.GetTaskHandler)
+	router.HandleFunc("GET /api/task", tasks.Auth(tasks.GetTaskHandler))
 	// Обновление существующей задачи.
-	router.HandleFunc("PUT /api/task", tasks.UpdateTaskHandler)
+	router.HandleFunc("PUT /api/task", tasks.Auth(tasks.UpdateTaskHandler))
 	// Выполнение существующей задачи.
-	router.HandleFunc("POST /api/task/done", tasks.DoneTaskHandler)
+	router.HandleFunc("POST /api/task/done", tasks.Auth(tasks.DoneTaskHandler))
 	// Удаление существующей задачи.
-	router.HandleFunc("DELETE /api/task", tasks.DeleteTaskHandler)
+	router.HandleFunc("DELETE /api/task", tasks.Auth(tasks.DeleteTaskHandler))
 
 	// Настраиваем сервер с таймаутами для защиты от зависших соединений.
 	server := &http.Server{

@@ -5,6 +5,7 @@ import (
 	"crypto/subtle"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"time"
@@ -60,4 +61,48 @@ func SigninHandler(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 	writeJSON(res, http.StatusOK, map[string]string{"token": signed})
+}
+
+func Auth(next http.HandlerFunc) http.HandlerFunc {
+	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		// смотрим наличие пароля
+		pass := os.Getenv("TODO_PASSWORD")
+		if len(pass) > 0 {
+			// JWT-токен из куки
+			var jwtToken string
+			cookie, err := req.Cookie("token")
+			if err != nil {
+				http.Error(res, "Authentification required", http.StatusUnauthorized)
+				return
+			}
+			jwtToken = cookie.Value
+
+			token, err := jwt.Parse(jwtToken, func(t *jwt.Token) (interface{}, error) {
+				if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+					return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
+				}
+				return []byte(os.Getenv("SALT_JWT")), nil
+			})
+			if err != nil || !token.Valid {
+				http.Error(res, "Authentification required", http.StatusUnauthorized)
+				return
+			}
+			claims, ok := token.Claims.(jwt.MapClaims)
+			if !ok {
+				http.Error(res, "Authentification required", http.StatusUnauthorized)
+				return
+			}
+			hashFromToken, ok := claims["hash"].(string)
+			if !ok {
+				http.Error(res, "Authentification required", http.StatusUnauthorized)
+				return
+			}
+			sum := sha256.Sum256([]byte(pass))
+			if hashFromToken != hex.EncodeToString(sum[:]) {
+				http.Error(res, "Authentification required", http.StatusUnauthorized)
+				return
+			}
+		}
+		next(res, req)
+	})
 }
