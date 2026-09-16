@@ -9,7 +9,7 @@ import (
 
 	"github.com/pyromeowww/task-scheduler/pkg/api"
 	"github.com/pyromeowww/task-scheduler/pkg/api/tasks"
-	"github.com/pyromeowww/task-scheduler/tests"
+	"github.com/pyromeowww/task-scheduler/pkg/settings"
 )
 
 // RunServer инициализирует и запускает HTTP-сервер.
@@ -19,11 +19,14 @@ func RunServer() {
 
 	// Порт берём из переменной окружения TODO_PORT,
 	// иначе используем порт по умолчанию.
-	todoPort := os.Getenv("TODO_PORT")
-	if todoPort == "" {
-		todoPort = strconv.Itoa(tests.Port)
+	port := settings.DefaultPort
+	if p := os.Getenv("TODO_PORT"); p != "" {
+		v, err := strconv.Atoi(p)
+		if err != nil || v < 1 || v > 65535 {
+			logger.Fatalf("invalid TODO_PORT=%q: must be integer 1..65535", p)
+		}
+		port = v
 	}
-
 	// Создаём роутер и регистрируем маршруты.
 	router := http.NewServeMux()
 	// Папка со статическими файлами фронтенда.
@@ -48,7 +51,7 @@ func RunServer() {
 
 	// Настраиваем сервер с таймаутами для защиты от зависших соединений.
 	server := &http.Server{
-		Addr:         ":" + todoPort,
+		Addr:         ":" + strconv.Itoa(port),
 		Handler:      router,
 		ErrorLog:     logger,
 		ReadTimeout:  5 * time.Second,
@@ -56,7 +59,7 @@ func RunServer() {
 		IdleTimeout:  15 * time.Second,
 	}
 
-	log.Printf("The server is running. Port: %s", todoPort)
+	logger.Printf("The server is running. Port: %d", port)
 
 	// Запускаем сервер. Ошибка возникает при остановке или сбое.
 	err := server.ListenAndServe()

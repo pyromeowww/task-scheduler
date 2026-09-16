@@ -26,8 +26,6 @@ func SigninHandler(res http.ResponseWriter, req *http.Request) {
 		Password string `json:"password"`
 	}
 
-	defer req.Body.Close()
-
 	// Читаем JSON из тела.
 	if err := json.NewDecoder(req.Body).Decode(&creds); err != nil {
 		writeError(res, http.StatusBadRequest, "JSON deserialization error: "+err.Error())

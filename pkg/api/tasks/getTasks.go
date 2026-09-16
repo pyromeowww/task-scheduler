@@ -23,19 +23,21 @@ func TasksHandler(res http.ResponseWriter, req *http.Request) {
 
 	switch {
 	case search == "":
-		tasks, err = db.Tasks(50) // в параметре максимальное количество записей
-	case isDate(search):
-		d, _ := time.Parse("02.01.2006", search)
-		tasks, err = db.SearchByDate(d.Format(settings.DateFormat), 50)
+		tasks, err = db.Tasks(settings.Limit) // в параметре максимальное количество записей
 	default:
-		tasks, err = db.SearchByText(search, 50)
+		if d, ok := tryParseDate(search); ok {
+			tasks, err = db.SearchByDate(d.Format(settings.DateFormat), settings.Limit)
+		} else {
+			tasks, err = db.SearchByText(search, settings.Limit)
+		}
+
+		if err != nil {
+			writeError(res, http.StatusInternalServerError, "Failed to get tasks: "+err.Error())
+			return
+		}
+		// Отправляем клиенту список задач в формате JSON.
+		writeJSON(res, http.StatusOK, TasksResp{Tasks: tasks})
 	}
-	if err != nil {
-		writeError(res, http.StatusInternalServerError, "Failed to get tasks: "+err.Error())
-		return
-	}
-	// Отправляем клиенту список задач в формате JSON.
-	writeJSON(res, http.StatusOK, TasksResp{Tasks: tasks})
 }
 
 func GetTaskHandler(res http.ResponseWriter, req *http.Request) {
@@ -58,7 +60,10 @@ func GetTaskHandler(res http.ResponseWriter, req *http.Request) {
 	writeJSON(res, http.StatusOK, task)
 }
 
-func isDate(s string) bool {
-	_, err := time.Parse("02.01.2006", s)
-	return err == nil
+func tryParseDate(s string) (time.Time, bool) {
+	t, err := time.Parse(settings.APIDateFormat, s)
+	if err != nil {
+		return time.Time{}, false
+	}
+	return t, true
 }

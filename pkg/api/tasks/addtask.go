@@ -3,6 +3,7 @@ package tasks
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -20,8 +21,6 @@ func AddTaskHandler(res http.ResponseWriter, req *http.Request) {
 	}
 
 	var task db.Task
-	defer req.Body.Close()
-
 	// Разбираем тело запроса в структуру задачи.
 	if err := json.NewDecoder(req.Body).Decode(&task); err != nil {
 		writeError(res, http.StatusBadRequest, "JSON deserialization error: "+err.Error())
@@ -54,7 +53,9 @@ func AddTaskHandler(res http.ResponseWriter, req *http.Request) {
 func writeJSON(res http.ResponseWriter, status int, data any) {
 	res.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	res.WriteHeader(status)
-	_ = json.NewEncoder(res).Encode(data)
+	if err := json.NewEncoder(res).Encode(data); err != nil {
+		log.Printf("encode response: %v", err)
+	}
 }
 
 // writeError отправляет ошибку в формате {"error": "текст"}.

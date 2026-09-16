@@ -17,8 +17,6 @@ func UpdateTaskHandler(res http.ResponseWriter, req *http.Request) {
 	// Переменная для десериализации входящих данных.
 	var task db.Task
 
-	defer req.Body.Close()
-
 	// Декодируем JSON из тела запроса в структуру Task.
 	if err := json.NewDecoder(req.Body).Decode(&task); err != nil {
 		writeError(res, http.StatusBadRequest, "JSON deserialization error: "+err.Error())

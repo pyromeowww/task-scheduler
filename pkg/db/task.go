@@ -20,7 +20,7 @@ type Task struct {
 // и возвращает её идентификатор.
 func AddTask(task *Task) (int64, error) {
 	query := `INSERT INTO scheduler (date, title, comment, repeat) VALUES (?, ?, ?, ?)`
-	res, err := Db.Exec(query, task.Date, task.Title, task.Comment, task.Repeat)
+	res, err := DB.Exec(query, task.Date, task.Title, task.Comment, task.Repeat)
 	if err != nil {
 		return 0, err
 	}
@@ -46,7 +46,7 @@ func Tasks(limit int) ([]*Task, error) {
 	query := `SELECT id, date, title, comment, repeat FROM scheduler ORDER BY date ASC LIMIT ?`
 
 	// Выполняем запрос. На место "?" подставится значение limit.
-	rows, err := Db.Query(query, limit)
+	rows, err := DB.Query(query, limit)
 	// Если база не смогла выполнить запрос — сразу возвращаем ошибку.
 	if err != nil {
 		return tasks, err
@@ -83,7 +83,7 @@ func Tasks(limit int) ([]*Task, error) {
 func GetTask(id string) (*Task, error) {
 	query := `SELECT id, date, title, comment, repeat FROM scheduler WHERE id = ?`
 	task := &Task{}
-	err := Db.QueryRow(query, id).Scan(&task.ID, &task.Date, &task.Title, &task.Comment, &task.Repeat)
+	err := DB.QueryRow(query, id).Scan(&task.ID, &task.Date, &task.Title, &task.Comment, &task.Repeat)
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
@@ -97,7 +97,7 @@ func GetTask(id string) (*Task, error) {
 
 func UpdateTask(task *Task) error {
 	query := `UPDATE scheduler SET date = ?, title = ?, comment = ?, repeat = ? WHERE id = ?`
-	res, err := Db.Exec(query, task.Date, task.Title, task.Comment, task.Repeat, task.ID)
+	res, err := DB.Exec(query, task.Date, task.Title, task.Comment, task.Repeat, task.ID)
 	if err != nil {
 		return err
 	}
@@ -116,7 +116,7 @@ func UpdateTask(task *Task) error {
 // DeleteTask — удаляет задачу по ID
 func DeleteTask(id string) error {
 	query := `DELETE FROM scheduler WHERE id = ?`
-	res, err := Db.Exec(query, id)
+	res, err := DB.Exec(query, id)
 	if err != nil {
 		return err
 	}
@@ -134,7 +134,7 @@ func DeleteTask(id string) error {
 // UpdateDate — обновляет дату при выполнение задачи
 func UpdateDate(next string, id string) error {
 	query := `UPDATE scheduler SET date = ? WHERE id = ?`
-	res, err := Db.Exec(query, next, id)
+	res, err := DB.Exec(query, next, id)
 	if err != nil {
 		return err
 	}
@@ -164,7 +164,7 @@ func SearchByDate(data string, limit int) ([]*Task, error) {
 	query := `SELECT id, date, title, comment, repeat FROM scheduler WHERE date = ? LIMIT ?`
 
 	// Выполняем запрос. На место "?" подставятся значения data и limit.
-	rows, err := Db.Query(query, data, limit)
+	rows, err := DB.Query(query, data, limit)
 	// Если база не смогла выполнить запрос — сразу возвращаем ошибку.
 	if err != nil {
 		return tasks, err
@@ -206,14 +206,14 @@ func SearchByText(data string, limit int) ([]*Task, error) {
 
 	// Выбираем задачи, где data встречается в заголовке ИЛИ комментарии.
 	// LIKE ищет подстроку, а не точное совпадение.
-	query := `SELECT * FROM scheduler WHERE title LIKE ? OR comment LIKE ? LIMIT ?`
+	query := `SELECT id, date, title, comment, repeat FROM scheduler WHERE title LIKE ? OR comment LIKE ?  ORDER BY date LIMIT ?`
 
 	// Оборачиваем текст в символы % — так LIKE ищет вхождение в любом месте строки.
 	like := "%" + data + "%"
 
 	// Передаём одно и то же значение в оба "?" (для title и comment),
 	// а последним аргументом — лимит.
-	rows, err := Db.Query(query, like, like, limit)
+	rows, err := DB.Query(query, like, like, limit)
 	// Если база не смогла выполнить запрос — сразу возвращаем ошибку.
 	if err != nil {
 		return tasks, err
