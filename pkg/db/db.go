@@ -40,7 +40,7 @@ func Close() error {
 
 // Init открывает базу данных и, если файл ещё не существовал,
 // создаёт таблицу задач и индекс.
-func Init(dbfile string) error {
+func Init(dbfile string) (err error) {
 
 	dir := filepath.Dir(dbfile)
 	if dir != "." && dir != "" {
@@ -58,7 +58,7 @@ func Init(dbfile string) error {
 		if info.IsDir() {
 			return fmt.Errorf("db path %q is a directory, not a file", dbfile)
 		}
-	case os.IsNotExist(err):
+	case errors.Is(err, os.ErrNotExist):
 		// Файла нет — устанавливаем флаг создания схемы.
 		install = true
 	default:
@@ -79,7 +79,6 @@ func Init(dbfile string) error {
 	}
 	// Проверяем, что подключение действительно работает.
 	if err = DB.Ping(); err != nil {
-		Close()
 		return fmt.Errorf("failed to ping database: %w", err)
 	}
 

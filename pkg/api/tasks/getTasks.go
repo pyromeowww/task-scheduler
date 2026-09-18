@@ -35,9 +35,9 @@ func TasksHandler(res http.ResponseWriter, req *http.Request) {
 			writeError(res, http.StatusInternalServerError, "Failed to get tasks: "+err.Error())
 			return
 		}
-		// Отправляем клиенту список задач в формате JSON.
-		writeJSON(res, http.StatusOK, TasksResp{Tasks: tasks})
 	}
+	// Отправляем клиенту список задач в формате JSON.
+	writeJSON(res, http.StatusOK, TasksResp{Tasks: tasks})
 }
 
 func GetTaskHandler(res http.ResponseWriter, req *http.Request) {

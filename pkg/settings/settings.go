@@ -7,4 +7,5 @@ const (
 	Limit           = 50
 	EnvSaltJWT      = "SALT_JWT"
 	EnvTodoPassword = "TODO_PASSWORD"
+	ErrAuthRequired = "authentication required"
 )

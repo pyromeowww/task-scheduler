@@ -54,7 +54,7 @@ func NextDateHandler(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	// Если параметр not не передан, берём текущее время.
+	// Если параметр now не передан, берём текущее время.
 	var now time.Time
 	nowStr := req.URL.Query().Get("now")
 	if nowStr == "" {
@@ -151,6 +151,8 @@ func nextWeek(date time.Time, now time.Time, fields []string) (string, error) {
 // Дни могут быть положительными (номер дня) или отрицательными
 // (-1 — последний день месяца, -2 — предпоследний).
 func nextMonthDays(date time.Time, now time.Time, fields []string) (string, error) {
+	const maxSearchDays = 4 * 366
+
 	if len(fields) < 2 || len(fields) > 3 {
 		return "", errors.New("invalid month rule format")
 	}
@@ -178,7 +180,7 @@ func nextMonthDays(date time.Time, now time.Time, fields []string) (string, erro
 	}
 
 	// Ищем ближайший подходящий день, перебирая даты по одному дню.
-	for {
+	for i := 0; i < maxSearchDays; i++ {
 		date = date.AddDate(0, 0, 1)
 		// Если месяцы ограничены списком, пропускаем неподходящие.
 		if len(monthMap) > 0 && !monthMap[int(date.Month())] {
@@ -186,10 +188,10 @@ func nextMonthDays(date time.Time, now time.Time, fields []string) (string, erro
 		}
 		// Дата подходит, если день совпал и она позже сегодняшней.
 		if isMatchDay(date, daysMap) && AfterNow(date, now) {
-			break
+			return date.Format(settings.DateFormat), nil
 		}
 	}
-	return date.Format(settings.DateFormat), nil
+	return "", errors.New("no matching date within 4 years")
 }
 
 // isMatchDay проверяет, входит ли день даты d в список разрешённых дней месяца.

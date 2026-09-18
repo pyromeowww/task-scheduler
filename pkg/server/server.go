@@ -14,6 +14,7 @@ import (
 
 // RunServer инициализирует и запускает HTTP-сервер.
 func RunServer() {
+	cfg := tasks.LoadConfig()
 	// Создаём логгер для записи ошибок сервера.
 	logger := log.New(os.Stdout, "[server]", log.LstdFlags|log.Lshortfile)
 
@@ -33,21 +34,22 @@ func RunServer() {
 	webDir := "./web"
 
 	router.Handle("/", http.FileServer(http.Dir(webDir)))
-	router.HandleFunc("POST /api/signin", tasks.SigninHandler)
+
+	router.HandleFunc("POST /api/signin", tasks.SigninHandler(cfg))
 	// Добавление новой задачи. Ожидает JSON.
-	router.HandleFunc("POST /api/task", tasks.Auth(tasks.AddTaskHandler))
+	router.Handle("POST /api/task", tasks.Auth(cfg, http.HandlerFunc(tasks.AddTaskHandler)))
 	// Вычисление следующей даты для правила повторения задачи.
 	router.HandleFunc("/api/nextdate", api.NextDateHandler)
 	// Получение списка всех задач. Возвращает JSON-массив задач.
-	router.HandleFunc("GET /api/tasks", tasks.Auth(tasks.TasksHandler))
+	router.Handle("GET /api/tasks", tasks.Auth(cfg, http.HandlerFunc(tasks.TasksHandler)))
 	// Получение одной задачи по её ID.
-	router.HandleFunc("GET /api/task", tasks.Auth(tasks.GetTaskHandler))
+	router.Handle("GET /api/task", tasks.Auth(cfg, http.HandlerFunc(tasks.GetTaskHandler)))
 	// Обновление существующей задачи.
-	router.HandleFunc("PUT /api/task", tasks.Auth(tasks.UpdateTaskHandler))
+	router.Handle("PUT /api/task", tasks.Auth(cfg, http.HandlerFunc(tasks.UpdateTaskHandler)))
 	// Выполнение существующей задачи.
-	router.HandleFunc("POST /api/task/done", tasks.Auth(tasks.DoneTaskHandler))
+	router.Handle("POST /api/task/done", tasks.Auth(cfg, http.HandlerFunc(tasks.DoneTaskHandler)))
 	// Удаление существующей задачи.
-	router.HandleFunc("DELETE /api/task", tasks.Auth(tasks.DeleteTaskHandler))
+	router.Handle("DELETE /api/task", tasks.Auth(cfg, http.HandlerFunc(tasks.DeleteTaskHandler)))
 
 	// Настраиваем сервер с таймаутами для защиты от зависших соединений.
 	server := &http.Server{

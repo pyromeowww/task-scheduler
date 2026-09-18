@@ -8,3 +8,4 @@ services:
     environment:
       - SALT_JWT=${SALT_JWT}
       - TODO_DBFILE=/app/data/scheduler.db
+      - TODO_PASSWORD=${TODO_PASSWORD}
